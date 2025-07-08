@@ -6,7 +6,7 @@ from config import DATABASE_PATH
 
 class AttendanceSystem:
     def __init__(self):
-        # Đảm bảo thư mục tồn tại
+        
         os.makedirs(os.path.dirname(DATABASE_PATH), exist_ok=True)
 
         try:
@@ -48,7 +48,7 @@ class AttendanceSystem:
             record = cursor.fetchone()
 
             if record:
-                if not record[1]:  # Chưa check-out
+                if not record[1]: 
                     cursor.execute('''
                         UPDATE attendance 
                         SET time_out=?, status='OUT' 
