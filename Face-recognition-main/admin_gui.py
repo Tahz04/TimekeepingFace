@@ -110,7 +110,7 @@ class AdminGUI:
                 )
             ''')
 
-            # Kiểm tra xem bảng attendance có cột employee_id chưa
+            # Kiểm tra bảng attendance có cột employee_id chưa
             self.cursor.execute("PRAGMA table_info(attendance)")
             columns = [col[1] for col in self.cursor.fetchall()]
 
