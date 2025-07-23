@@ -2,7 +2,6 @@ import cv2
 import time
 import random
 from tkinter import messagebox
-from face_utils import FaceRecognizer
 from config import *
 from models.employee_model import EmployeeModel
 from views.employee_view import EmployeeView
@@ -135,8 +134,22 @@ class EmployeeController:
             self.return_to_main()
 
     def process_attendance(self, emp_id, name):
-        if self.model.mark_attendance(emp_id, name):
-            self.view.display_message(f"Đã chấm công thành công cho {name}!", "green")
+        """Xử lý chấm công với trạng thái IN/OUT"""
+        success, status = self.model.mark_attendance(emp_id, name)
+
+        if success:
+            # Chụp lại frame để log với trạng thái chính xác
+            ret, frame = self.cap.read()
+            if ret:
+                frame = cv2.flip(frame, 1)
+                # Lấy lại vị trí khuôn mặt
+                result = self.face_recognizer.process_frame_with_verification(frame)
+                if result:
+                    face_location, _, _ = result
+                    self.face_recognizer.log_detection(frame, face_location, name, True, status)
+
+            message = f"Đã chấm công {status} thành công cho {name}!"
+            self.view.display_message(message, "green")
             time.sleep(2)
         else:
             self.view.display_message("Lỗi khi chấm công!", "red")
