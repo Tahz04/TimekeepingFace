@@ -124,16 +124,13 @@ class FaceRecognizer:
         return np.array([[p.x, p.y] for p in shape.parts()])
 
     def verify_liveness(self, frame, face_location, action):
-        """Xác thực người thật bằng hành động"""
+        """Xác thực người thật bằng hành động (đã bỏ mỉm cười)"""
         landmarks = self.get_facial_landmarks(frame, face_location)
 
         if "quay đầu" in action:
-            # Tính toán hướng khuôn mặt dựa trên landmarks
             return self.check_head_pose(landmarks, action)
         elif "nháy mắt" in action:
             return self.check_eye_blink(landmarks)
-        elif "mỉm cười" in action:
-            return self.check_smile(landmarks)
         elif "gật đầu" in action:
             return self.check_nod(landmarks)
         return False
@@ -172,12 +169,6 @@ class FaceRecognizer:
         ear_right = eye_aspect_ratio(right_eye)
         return (ear_left < 0.2) or (ear_right < 0.2)
 
-    def check_smile(self, landmarks):
-        """Kiểm tra nụ cười"""
-        mouth = landmarks[48:68]
-        mouth_width = np.linalg.norm(mouth[6] - mouth[0])
-        mouth_height = np.linalg.norm(mouth[2] - mouth[10])
-        return mouth_height > mouth_width * 0.4
 
     def check_nod(self, landmarks):
         """Kiểm tra gật đầu"""
@@ -226,22 +217,27 @@ class FaceRecognizer:
             self.face_hold_start_time = None
             return None
 
-    def log_detection(self, frame, face_location, name, success):
-        """Ghi log nhận diện theo ngày"""
+    def log_detection(self, frame, face_location, name, success, status="in"):
+        """Ghi log nhận diện theo ngày và trạng thái"""
         try:
             date_dir = datetime.now().strftime("%d-%m-%Y")
             log_dir = os.path.join(LOG_DIR, date_dir)
             os.makedirs(log_dir, exist_ok=True)
 
-            status = "in" if success else "unknown"
             timestamp = datetime.now().strftime("%H%M%S")
-            filename = f"{name}_{status}_{timestamp}.jpg"
+            filename = f"{name}_{status.lower()}_{timestamp}.jpg"
             log_path = os.path.join(log_dir, filename)
 
             if face_location and frame is not None:
                 top, right, bottom, left = face_location
+                top = int(top / RESIZE_SCALE)
+                right = int(right / RESIZE_SCALE)
+                bottom = int(bottom / RESIZE_SCALE)
+                left = int(left / RESIZE_SCALE)
+
                 cv2.rectangle(frame, (left, top), (right, bottom), (0, 255, 0), 2)
-                cv2.putText(frame, name, (left, top - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
+                cv2.putText(frame, f"{name} {status.upper()}", (left, top - 10),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 255, 0), 2)
                 cv2.putText(frame, datetime.now().strftime("%H:%M:%S"),
                             (left, bottom + 25), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
 
