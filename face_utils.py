@@ -124,7 +124,7 @@ class FaceRecognizer:
         return np.array([[p.x, p.y] for p in shape.parts()])
 
     def verify_liveness(self, frame, face_location, action):
-        """Xác thực người thật bằng hành động (đã bỏ mỉm cười)"""
+        """Xác thực người thật bằng hành động"""
         landmarks = self.get_facial_landmarks(frame, face_location)
 
         if "quay đầu" in action:
