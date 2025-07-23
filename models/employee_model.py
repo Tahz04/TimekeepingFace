@@ -35,13 +35,15 @@ class EmployeeModel:
             return None, None
 
     def mark_attendance(self, emp_id, name):
+        """Chấm công cho nhân viên và trả về trạng thái hiện tại"""
         if not emp_id or not name:
-            return False
+            return False, None
 
         try:
             today = datetime.now().strftime('%Y-%m-%d')
             now = datetime.now().strftime('%H:%M:%S')
 
+            # Kiểm tra lần chấm công gần nhất
             self.cursor.execute('''
                 SELECT id, time_out FROM attendance 
                 WHERE employee_id=? AND date=?
@@ -49,22 +51,25 @@ class EmployeeModel:
             ''', (emp_id, today))
             record = self.cursor.fetchone()
 
-            if record and not record[1]:
+            current_status = None
+            if record and not record[1]:  # Đã chấm vào nhưng chưa chấm ra
                 self.cursor.execute('''
                     UPDATE attendance SET time_out=?, status='OUT' WHERE id=?
                 ''', (now, record[0]))
-            else:
+                current_status = 'OUT'
+            else:  # Chấm công vào
                 self.cursor.execute('''
                     INSERT INTO attendance (employee_id, date, time_in, status)
                     VALUES (?, ?, ?, 'IN')
                 ''', (emp_id, today, now))
+                current_status = 'IN'
 
             self.conn.commit()
-            return True
+            return True, current_status
         except sqlite3.Error as e:
             print(f"Lỗi chấm công: {str(e)}")
             self.conn.rollback()
-            return False
+            return False, None
 
     def close(self):
         try:
