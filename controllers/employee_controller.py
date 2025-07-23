@@ -6,6 +6,7 @@ from config import *
 from models.employee_model import EmployeeModel
 from views.employee_view import EmployeeView
 
+
 class EmployeeController:
     def __init__(self, root, return_to_main_callback):
         self.view = EmployeeView(root)
