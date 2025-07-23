@@ -23,7 +23,7 @@ class AdminModel:
         self.fix_wrong_attendance_data()
 
     def upgrade_database_structure(self):
-        """Nâng cấp cấu trúc database nếu cần"""
+        """Tạo bảng nếu chưa tồn tại"""
         try:
             self.cursor.execute('''
                 CREATE TABLE IF NOT EXISTS employees (
@@ -33,34 +33,21 @@ class AdminModel:
                 )
             ''')
 
-            self.cursor.execute("PRAGMA table_info(attendance)")
-            columns = [col[1] for col in self.cursor.fetchall()]
-
-            if 'employee_id' not in columns:
-                self.cursor.execute('''
-                    CREATE TABLE IF NOT EXISTS attendance_new (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        employee_id INTEGER NOT NULL,
-                        date TEXT NOT NULL,
-                        time_in TEXT,
-                        time_out TEXT,
-                        status TEXT,
-                        FOREIGN KEY (employee_id) REFERENCES employees (id)
-                    )
-                ''')
-
-                self.cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='attendance'")
-                if self.cursor.fetchone():
-                    self.cursor.execute('''
-                        INSERT INTO attendance_new (employee_id, date, time_in, time_out, status)
-                        SELECT 1, date, time_in, time_out, status FROM attendance
-                    ''')
-                    self.cursor.execute("DROP TABLE attendance")
-                    self.cursor.execute("ALTER TABLE attendance_new RENAME TO attendance")
+            self.cursor.execute('''
+                CREATE TABLE IF NOT EXISTS attendance (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    employee_id INTEGER NOT NULL,
+                    date TEXT NOT NULL,
+                    time_in TEXT,
+                    time_out TEXT,
+                    status TEXT,
+                    FOREIGN KEY (employee_id) REFERENCES employees (id)
+                )
+            ''')
 
             self.conn.commit()
         except Exception as e:
-            messagebox.showerror("Database Error", f"Không thể nâng cấp database: {str(e)}")
+            messagebox.showerror("Database Error", f"Không thể tạo bảng database: {str(e)}")
             self.conn.rollback()
 
     def sync_employee_data(self):
