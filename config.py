@@ -36,8 +36,10 @@ RANDOM_ACTIONS = [
     "Vui lòng quay đầu sang trái",
     "Vui lòng quay đầu sang phải",
     "Vui lòng nháy mắt",
-    "Vui lòng mỉm cười",
     "Vui lòng gật đầu"
 ]
+
 ACTION_TIMEOUT = 5
 LIVENESS_THRESHOLD = 0.7
+
+AUTO_DETECT_IN_OUT = True
